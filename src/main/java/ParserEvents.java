@@ -14,8 +14,10 @@ import java.util.stream.Collectors;
 public class ParserEvents {
     public static void main(String[] args) throws IOException {
         fillEventsFromGorodZovet();
+        fillEventsFromAllEvent();
         sortedEvents();
         Event.printAllEvent();
+
 }
 public static void fillEventsFromGorodZovet() throws IOException {
     String url = "https://gorodzovet.ru/spb/it/";
@@ -29,6 +31,48 @@ public static void fillEventsFromGorodZovet() throws IOException {
         Event.events.add(event);
     }
 }
+    public static void fillEventsFromAllEvent() throws IOException {
+        String url = "https://all-events.ru/events/calendar/type-is-conferencia/theme-is-informatsionnye_tekhnologii/";
+        Document document = fileCheck("GlobalTechForum", url);
+        Elements elements = document.getElementsByClass("event_order_1");
+        for (int i = 0; i < elements.size(); i++) {
+            String name = elements.get(i).getElementsByClass("event_name_new").text();
+//
+            String date = elements.get(i).getElementsByClass("event-date").text();
+//
+            date = parseDateTwo(date);
+            String[] date2 = date.split("-");
+
+            String[] dateDayAndMonth = date2[0].split("\\.");
+           int day=Integer.parseInt(dateDayAndMonth[0]);
+            int month=Integer.parseInt(dateDayAndMonth[1]);
+           if(date2.length>1) {
+               String[] dateDayAndMonthFinish = date2[1].split("\\.");
+               int day2=Integer.parseInt(dateDayAndMonthFinish[0]);
+               int month2=Integer.parseInt(dateDayAndMonthFinish[1]);
+               Event event = new Event(name, month, day, month2, day2);
+               Event.events.add(event);
+           }
+           else{
+               Event event = new Event(name, month, day);
+               Event.events.add(event);
+           }
+        }
+    }
+    public static int[] parseDate(String date) {
+        String firstDateStr = date.split(" - ")[0].trim();
+        firstDateStr = firstDateStr.split(" ")[0].trim();
+        String[] parts = firstDateStr.split("\\.");
+        int day = Integer.parseInt(parts[0]);
+        int month = Integer.parseInt(parts[1]);
+
+        return new int[]{day, month};
+    }
+    public static String parseDateTwo(String date){
+        date = date.replaceAll("[^0-9.-]", "");
+        date = date.replaceAll("-+$", "");
+        return date;
+    }
 public static void sortedEvents(){
     Event.events = Event.events.stream()
             .sorted(Comparator.comparing(Event::getMonth)
