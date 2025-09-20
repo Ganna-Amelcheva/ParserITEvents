@@ -1,15 +1,13 @@
 import org.jsoup.Jsoup;
 
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
+
 import java.util.stream.Collectors;
 
 public class ParserEvents {
@@ -30,14 +28,7 @@ public class ParserEvents {
             String name = elements.get(i).getElementsByTag("h3").text();
             String month = elements.get(i).getElementsByClass("event-month").text();
             String day = elements.get(i).getElementsByClass("event-day").text();
-            String[] dates = day.split(" ");
-            if (dates.length == 1) {
-                Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(day));
-                Event.events.add(event);
-            } else {
-                Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[2]));
-                Event.events.add(event);
-            }
+            checkEventOneDayOrMore(day, name, month);
         }
     }
 
@@ -47,25 +38,8 @@ public class ParserEvents {
         Elements elements = document.getElementsByClass("event_order_1");
         for (int i = 0; i < elements.size(); i++) {
             String name = elements.get(i).getElementsByClass("event_name_new").text();
-//
             String date = elements.get(i).getElementsByClass("event-date").text();
-//
-            date = parseDateTwo(date);
-            String[] date2 = date.split("-");
-
-            String[] dateDayAndMonth = date2[0].split("\\.");
-            int day = Integer.parseInt(dateDayAndMonth[0]);
-            int month = Integer.parseInt(dateDayAndMonth[1]);
-            if (date2.length > 1) {
-                String[] dateDayAndMonthFinish = date2[1].split("\\.");
-                int day2 = Integer.parseInt(dateDayAndMonthFinish[0]);
-                int month2 = Integer.parseInt(dateDayAndMonthFinish[1]);
-                Event event = new Event(name, month, day, month2, day2);
-                Event.events.add(event);
-            } else {
-                Event event = new Event(name, month, day);
-                Event.events.add(event);
-            }
+            checkDateLength(date, name);
         }
     }
 
@@ -79,7 +53,34 @@ public class ParserEvents {
             checkNumberOrText(date, name);
         }
     }
+    public static void checkEventOneDayOrMore(String day, String name, String month){
+        String[] dates = day.split(" ");
+        if (dates.length == 1) {
+            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(day));
+            Event.events.add(event);
+        } else {
+            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[2]));
+            Event.events.add(event);
+        }
+    }
+    public static void checkDateLength(String date, String name){
+        date = parseDateTwo(date);
+        String[] date2 = date.split("-");
 
+        String[] dateDayAndMonth = date2[0].split("\\.");
+        int day = Integer.parseInt(dateDayAndMonth[0]);
+        int month = Integer.parseInt(dateDayAndMonth[1]);
+        if (date2.length > 1) {
+            String[] dateDayAndMonthFinish = date2[1].split("\\.");
+            int day2 = Integer.parseInt(dateDayAndMonthFinish[0]);
+            int month2 = Integer.parseInt(dateDayAndMonthFinish[1]);
+            Event event = new Event(name, month, day, month2, day2);
+            Event.events.add(event);
+        } else {
+            Event event = new Event(name, month, day);
+            Event.events.add(event);
+        }
+    }
     public static void checkNumberOrText(String date, String name) {
         date = parseDateThree(date);
         String[] date2 = date.split("по");
@@ -96,15 +97,7 @@ public class ParserEvents {
         }
     }
 
-    public static int[] parseDate(String date) {
-        String firstDateStr = date.split(" - ")[0].trim();
-        firstDateStr = firstDateStr.split(" ")[0].trim();
-        String[] parts = firstDateStr.split("\\.");
-        int day = Integer.parseInt(parts[0]);
-        int month = Integer.parseInt(parts[1]);
 
-        return new int[]{day, month};
-    }
 
     public static String parseDateTwo(String date) {
         date = date.replaceAll("[^0-9.-]", "");
