@@ -28,6 +28,7 @@ public class ParserEvents {
             String name = elements.get(i).getElementsByTag("h3").text();
             String month = elements.get(i).getElementsByClass("event-month").text();
             String day = elements.get(i).getElementsByClass("event-day").text();
+            System.out.println(day);
             checkEventOneDayOrMore(day, name, month);
         }
     }
@@ -59,7 +60,7 @@ public class ParserEvents {
             Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(day));
             Event.events.add(event);
         } else {
-            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[2]));
+            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[dates.length-1]));
             Event.events.add(event);
         }
     }
@@ -107,10 +108,10 @@ public class ParserEvents {
 
     public static String parseDateThree(String date) {
         date = date.replace("с ", "").replace("по ", "");
-        date = date.replaceAll("[^0-9а-яё ]", "");
+        date = date.replaceAll("[^0-9а-яё ]", "").trim();
         return date;
     }
-
+//протестировать sortedEvents()
     public static void sortedEvents() {
         Event.events = Event.events.stream()
                 .sorted(Comparator.comparing(Event::getMonth)
