@@ -3,6 +3,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,14 +16,92 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class ParserEvents {
+    public static boolean flag = true;
+    public static JScrollPane scrollPane;
+    public static JTextField jTextField;
+    public static JTable table;
+    public static JButton button1;
+    public static JButton searchButton;
+    public static JPanel searchPanel;
+    public static JFrame jframe;
+    public static DefaultTableModel defaultTableModel;
+
     public static void main(String[] args) throws IOException {
-        fillEventsFromGorodZovet();
+//        fillEventsFromGorodZovet();
         fillEventsFromAllEvent();
-        fillEventsFromExpomap();
+//        fillEventsFromExpomap();
         sortedEvents();
+//        вызываем метод ля создания окна
+        applicationEvent();
         Event.printAllEvent();
 
     }
+
+    public static void applicationEvent() {
+        createWindow();
+
+        searchButton = new JButton("Найти");
+
+
+        Object[][] events = new Object[Event.events.size()][2];
+        String[] columsName = {"Дата", "Мероприятие"};
+        fillEvents(events);
+        defaultTableModel = new DefaultTableModel(events, columsName);
+        table = new JTable(defaultTableModel);
+        scrollPane = new JScrollPane(table);
+        jTextField = new JTextField("Text", 20);
+
+        createSeachPanel();
+
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                defaultTableModel.setRowCount(0);
+                String text = jTextField.getText().toLowerCase();
+                for (int i = 0; i < Event.events.size(); i++) {
+                    if (Event.events.get(i).getAllDate().toString().contains(text) || Event.events.get(i).getName().toLowerCase().contains(text))
+                        defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                }
+                if (flag) {
+                    searchButton.setBackground(Color.RED);
+                } else {
+                    searchButton.setBackground(Color.BLUE);
+                }
+                flag = !flag;
+            }
+        });
+
+        jframe.setVisible(true);
+
+    }
+
+    public static void createWindow() {
+        jframe = new JFrame("Календарь событий");
+        jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jframe.setSize(500, 400);
+        jframe.setLocationRelativeTo(null);
+
+        jframe.setLayout(new BorderLayout());
+    }
+
+    public static void createSeachPanel() {
+        // Создаем панель для компонентов
+        searchPanel = new JPanel();
+        searchPanel.add(new JLabel("Поиск событий:"));
+        searchPanel.add(jTextField);
+        searchPanel.add(searchButton);
+        searchPanel.add(scrollPane);
+        jframe.add(searchPanel, BorderLayout.CENTER);
+    }
+
+    public static void fillEvents(Object[][] events) {
+        for (int i = 0; i < events.length; i++) {
+            events[i][0] = Event.events.get(i).getAllDate();
+            events[i][1] = Event.events.get(i).getName();
+        }
+        System.out.println("ТАБЛИЦА");
+    }
+
 
     public static void fillEventsFromGorodZovet() throws IOException {
         String url = "https://gorodzovet.ru/spb/it/";
@@ -54,17 +137,19 @@ public class ParserEvents {
             checkNumberOrText(date, name);
         }
     }
-    public static void checkEventOneDayOrMore(String day, String name, String month){
+
+    public static void checkEventOneDayOrMore(String day, String name, String month) {
         String[] dates = day.split(" ");
         if (dates.length == 1) {
             Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(day));
             Event.events.add(event);
         } else {
-            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[dates.length-1]));
+            Event event = new Event(name, getFormateDateMonth(month), Integer.parseInt(dates[0]), getFormateDateMonth(month), Integer.parseInt(dates[dates.length - 1]));
             Event.events.add(event);
         }
     }
-    public static void checkDateLength(String date, String name){
+
+    public static void checkDateLength(String date, String name) {
         date = parseDateTwo(date);
         String[] date2 = date.split("-");
 
@@ -82,6 +167,7 @@ public class ParserEvents {
             Event.events.add(event);
         }
     }
+
     public static void checkNumberOrText(String date, String name) {
         date = parseDateThree(date);
         String[] date2 = date.split("по");
@@ -99,7 +185,6 @@ public class ParserEvents {
     }
 
 
-
     public static String parseDateTwo(String date) {
         date = date.replaceAll("[^0-9.-]", "");
         date = date.replaceAll("-+$", "");
@@ -111,7 +196,8 @@ public class ParserEvents {
         date = date.replaceAll("[^0-9а-яё ]", "").trim();
         return date;
     }
-//протестировать sortedEvents()
+
+    //протестировать sortedEvents()
     public static void sortedEvents() {
         Event.events = Event.events.stream()
                 .sorted(Comparator.comparing(Event::getMonth)
