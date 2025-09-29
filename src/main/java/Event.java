@@ -10,6 +10,7 @@ public class Event {
     public static List<Event> events = new ArrayList<Event>();
 private int finishDay;
 private int finishMonth;
+private String allDate;
     public Event(String name, int month, int day) {
         this.name = name;
         this.month = month;
@@ -25,6 +26,12 @@ private int finishMonth;
 
     }
 
+    public String getAllDate() {
+        if(finishDay==0){
+        return day+"."+month;
+    }
+    return day+"."+month+"-"+finishDay+"."+finishMonth;
+    }
     public int getFinishDay() {
         return finishDay;
     }
@@ -76,6 +83,17 @@ private int finishMonth;
         for (int i = 0; i < events.size(); i++) {
             events.get(i).printEvent();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "name='" + name + '\'' +
+                ", month=" + month +
+                ", day=" + day +
+                ", finishDay=" + finishDay +
+                ", finishMonth=" + finishMonth +
+                '}';
     }
 }
 
