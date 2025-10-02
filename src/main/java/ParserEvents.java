@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 public class ParserEvents {
     public static boolean flag = true;
+    public static boolean flag2 = true;
     public static JScrollPane scrollPane;
     public static JTextField jTextField;
     public static JTable table;
@@ -25,7 +26,10 @@ public class ParserEvents {
     public static JPanel searchPanel;
     public static JFrame jframe;
     public static DefaultTableModel defaultTableModel;
-    public static JButton filterButton;
+//    public static JButton filterButton;
+    public static JButton filterByDateButton;
+    public static JButton filterByEventButton;
+    public static JButton cancelButton;
 
     public static void main(String[] args) throws IOException {
 //        fillEventsFromGorodZovet();
@@ -42,8 +46,10 @@ public class ParserEvents {
         createWindow();
 
         searchButton = new JButton("Найти");
-        filterButton = new JButton("Фильтрация");
-
+//        filterButton = new JButton("Фильтрация");
+        filterByDateButton = new JButton("Фильтрация по дате");
+        filterByEventButton = new JButton("Фильтрация по сoбытиям");
+        cancelButton = new JButton("Отмена");
         Object[][] events = new Object[Event.events.size()][2];
         String[] columsName = {"Дата", "Мероприятие"};
         fillEvents(events);
@@ -63,15 +69,20 @@ public class ParserEvents {
                     if (Event.events.get(i).getAllDate().toString().contains(text) || Event.events.get(i).getName().toLowerCase().contains(text))
                         defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
                 }
-//                if (flag) {
-//                    searchButton.setBackground(Color.RED);
-//                } else {
-//                    searchButton.setBackground(Color.BLUE);
-//                }
-//                flag = !flag;
+//
             }
         });
-filterButton.addActionListener(new ActionListener () {
+//        filterButton.addActionListener(new ActionListener () {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                defaultTableModel.setRowCount(0);
+//                sortedEvents();
+//                for(int i=0; i<Event.events.size(); i++){
+//                    defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+//                }
+//            }
+//        });
+        filterByDateButton.addActionListener(new ActionListener () {
     @Override
     public void actionPerformed(ActionEvent e) {
         defaultTableModel.setRowCount(0);
@@ -81,6 +92,26 @@ filterButton.addActionListener(new ActionListener () {
         }
     }
 });
+        filterByEventButton.addActionListener(new ActionListener () {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                defaultTableModel.setRowCount(0);
+                sortedEventsByAlphabet();
+                for(int i=0; i<Event.events.size(); i++){
+                    defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                }
+            }
+        });
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                defaultTableModel.setRowCount(0);
+                sortedEvents();
+                for(int i = 0; i < Event.events.size(); i++){
+                    defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                }
+            }
+        });
         jframe.setVisible(true);
 
     }
@@ -100,7 +131,10 @@ filterButton.addActionListener(new ActionListener () {
         searchPanel.add(new JLabel("Поиск событий:"));
         searchPanel.add(jTextField);
         searchPanel.add(searchButton);
-        searchPanel.add(filterButton);
+//        searchPanel.add(filterButton);
+        searchPanel.add(filterByDateButton);
+        searchPanel.add(filterByEventButton);
+        searchPanel.add(cancelButton);
         searchPanel.add(scrollPane);
         jframe.add(searchPanel, BorderLayout.CENTER);
     }
@@ -224,6 +258,18 @@ filterButton.addActionListener(new ActionListener () {
                     .collect(Collectors.toList());
         }
         flag = !flag;
+    }
+    public static void sortedEventsByAlphabet() {
+        if (flag2) {
+            Event.events = Event.events.stream()
+                    .sorted(Comparator.comparing(Event::getName))
+                    .collect(Collectors.toList());
+        } else {
+            Event.events = Event.events.stream()
+                    .sorted(Comparator.comparing(Event::getName).reversed())
+                    .collect(Collectors.toList());
+        }
+        flag2 = !flag2;
     }
 
     public static int getFormateDateMonth(String month) {
