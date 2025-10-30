@@ -11,7 +11,9 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import java.util.stream.Collectors;
 
@@ -26,20 +28,30 @@ public class ParserEvents {
     public static JPanel searchPanel;
     public static JFrame jframe;
     public static DefaultTableModel defaultTableModel;
-//    public static JButton filterButton;
+    //    public static JButton filterButton;
     public static JButton filterByDateButton;
     public static JButton filterByEventButton;
     public static JButton cancelButton;
+    private static DaoEvent daoEvent;
 
     public static void main(String[] args) throws IOException {
 //        fillEventsFromGorodZovet();
         fillEventsFromAllEvent();
 //        fillEventsFromExpomap();
+
         sortedEvents();
+        createAndFillTable();
 //        вызываем метод ля создания окна
         applicationEvent();
         Event.printAllEvent();
 
+    }
+    public static void createAndFillTable() {
+        daoEvent = new DaoEvent();
+        daoEvent.createTable();
+        for(Event ev: Event.events){
+            daoEvent.saveEvents(ev.getId(), ev.getName(), ev.getMonth(), ev.getDay(), ev.getFinishDay(), ev.getFinishMonth());
+        }
     }
 
     public static void applicationEvent() {
@@ -66,8 +78,10 @@ public class ParserEvents {
                 defaultTableModel.setRowCount(0);
                 String text = jTextField.getText().toLowerCase();
                 for (int i = 0; i < Event.events.size(); i++) {
-                    if (Event.events.get(i).getAllDate().toString().contains(text) || Event.events.get(i).getName().toLowerCase().contains(text))
-                        defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                    if (Event.events.get(i).getAllDate().toString().contains(text) || Event.events.get(i).getName()
+                            .toLowerCase().contains(text))
+                        defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(),
+                                Event.events.get(i).getName()});
                 }
 //
             }
@@ -82,22 +96,24 @@ public class ParserEvents {
 //                }
 //            }
 //        });
-        filterByDateButton.addActionListener(new ActionListener () {
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        defaultTableModel.setRowCount(0);
-        sortedEvents();
-        for(int i=0; i<Event.events.size(); i++){
-            defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
-        }
-    }
-});
-        filterByEventButton.addActionListener(new ActionListener () {
+        filterByDateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                defaultTableModel.setRowCount(0);
+                sortedEvents();
+                findThreeEvent(events);
+
+                for (int i = 0; i < Event.events.size(); i++) {
+                    defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                }
+            }
+        });
+        filterByEventButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 defaultTableModel.setRowCount(0);
                 sortedEventsByAlphabet();
-                for(int i=0; i<Event.events.size(); i++){
+                for (int i = 0; i < Event.events.size(); i++) {
                     defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
                 }
             }
@@ -107,8 +123,9 @@ public class ParserEvents {
             public void actionPerformed(ActionEvent e) {
                 defaultTableModel.setRowCount(0);
                 sortedEvents();
-                for(int i = 0; i < Event.events.size(); i++){
-                    defaultTableModel.addRow(new Object[]{Event.events.get(i).getAllDate(), Event.events.get(i).getName()});
+                List<Event> newEvents = daoEvent.getAllEvents();
+             for (int i = 0; i < newEvents.size(); i++) {
+                    defaultTableModel.addRow(new Object[]{newEvents.get(i).getAllDate(), newEvents.get(i).getName()});
                 }
             }
         });
@@ -140,11 +157,33 @@ public class ParserEvents {
     }
 
     public static void fillEvents(Object[][] events) {
+        List <Event> allEvents = daoEvent.getAllEvents();
         for (int i = 0; i < events.length; i++) {
-            events[i][0] = Event.events.get(i).getAllDate();
-            events[i][1] = Event.events.get(i).getName();
+            events[i][0] = allEvents.get(i).getAllDate();
+            events[i][1] = allEvents.get(i).getName();
         }
         System.out.println("ТАБЛИЦА");
+
+    }
+    public static void findThreeEvent(Object[][] events){
+        List <Event> allEvents = daoEvent.findThreeFirstEvents();
+        for (int i = 0; i < events.length; i++) {
+            events[i][0] = allEvents.get(i).getAllDate();
+            events[i][1] = allEvents.get(i).getName();
+        }
+    }
+    public static void dropTable(){
+        daoEvent.dropTable();
+        List <Event> allEvents = daoEvent.getAllEvents();
+        if(allEvents.isEmpty()){
+            defaultTableModel.setRowCount(0);
+        }
+    }
+    public static void deleteEventById(long id){
+        daoEvent.deleteById(id);
+    }
+    public static void deleteEventByName(String name){
+        daoEvent.deleteName(name);
     }
 
 
@@ -259,6 +298,7 @@ public class ParserEvents {
         }
         flag = !flag;
     }
+
     public static void sortedEventsByAlphabet() {
         if (flag2) {
             Event.events = Event.events.stream()
